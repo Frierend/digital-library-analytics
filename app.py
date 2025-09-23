@@ -20,6 +20,62 @@ from utils.pattern_mining import PatternMiner
 from utils.visualization import Visualizer
 from utils.insights import InsightGenerator
 
+# Configure Streamlit page
+st.set_page_config(
+    page_title="Digital Library Analytics",
+    page_icon="📚",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Cache configuration
+@st.cache_data
+def load_and_process_data(library_file_content, metadata_file_content):
+    """Cache the data loading and processing step"""
+    import io
+    
+    # Convert uploaded files to DataFrames
+    library_df = pd.read_csv(io.StringIO(library_file_content))
+    metadata_df = pd.read_csv(io.StringIO(metadata_file_content))
+    
+    # Process data
+    preprocessor = DataPreprocessor()
+    merged_data = preprocessor.merge_data(library_df, metadata_df)
+    
+    return merged_data
+
+@st.cache_data
+def generate_association_rules_cached(_data, min_support, min_confidence, min_lift):
+    """Cache association rules generation"""
+    pattern_miner = PatternMiner()
+    rules_df = pattern_miner.generate_association_rules(
+        _data, min_support, min_confidence, min_lift
+    )
+    return rules_df
+
+@st.cache_data
+def generate_insights_cached(_data):
+    """Cache insights generation"""
+    insight_generator = InsightGenerator()
+    insights = insight_generator.generate_insights(_data)
+    return insights
+
+@st.cache_data
+def create_visualizations_cached(_data):
+    """Cache visualization creation"""
+    visualizer = Visualizer()
+    
+    viz_data = {
+        'top_books': visualizer.plot_top_borrowed_books(_data),
+        'trends': visualizer.plot_borrowing_trends(_data),
+        'ratings': visualizer.plot_rating_distribution(_data),
+        'devices': visualizer.plot_device_usage(_data),
+        'session_duration': visualizer.plot_session_duration_by_device(_data),
+        'device_ratings': visualizer.plot_rating_by_device(_data)
+    }
+    
+    return viz_data
+
 # Page config
 st.set_page_config(
     page_title="Digital Library Analytics",
@@ -91,21 +147,20 @@ def main():
     )
     
     if library_file and metadata_file:
+        # Convert uploaded files to string content for caching
+        library_content = str(library_file.read(), "utf-8")
+        metadata_content = str(metadata_file.read(), "utf-8")
+        
         if st.sidebar.button("🔄 Load & Process Data"):
             with st.spinner("Processing data..."):
                 try:
-                    # Load data
-                    library_df = pd.read_csv(library_file)
-                    metadata_df = pd.read_csv(metadata_file)
-                    
-                    # Display basic info
-                    st.sidebar.info(f"📊 Library: {len(library_df)} records, {library_df['book_id'].nunique()} unique books")
-                    st.sidebar.info(f"📚 Metadata: {len(metadata_df)} book records")
-                    
-                    # Process data
-                    merged_data = st.session_state.preprocessor.merge_data(library_df, metadata_df)
+                    # Use cached data loading
+                    merged_data = load_and_process_data(library_content, metadata_content)
                     st.session_state.merged_data = merged_data
                     st.session_state.data_loaded = True
+                    
+                    # Display basic info
+                    st.sidebar.info(f"📊 Library: {len(merged_data)} records, {merged_data['book_id'].nunique()} unique books")
                     
                     # Check merge success
                     books_with_metadata = merged_data['title'].notna().sum()
@@ -287,51 +342,40 @@ def display_dashboard(data, min_support, min_confidence, min_lift, search_term):
         display_device_analysis(display_data)
 
 def display_dashboard_charts(data):
-    """Display dashboard charts"""
-    visualizer = Visualizer()
+    """Display dashboard charts using cached visualizations"""
+    
+    # Use cached visualizations
+    viz_data = create_visualizations_cached(data)
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.subheader("📚 Top Borrowed Books")
-        top_books_fig = visualizer.plot_top_borrowed_books(data)
-        st.plotly_chart(top_books_fig, use_container_width=True)
+        st.plotly_chart(viz_data['top_books'], use_container_width=True)
     
     with col2:
         st.subheader("📈 Borrowing Trends Over Time")
-        trends_fig = visualizer.plot_borrowing_trends(data)
-        st.plotly_chart(trends_fig, use_container_width=True)
+        st.plotly_chart(viz_data['trends'], use_container_width=True)
     
     col3, col4 = st.columns(2)
     
     with col3:
         st.subheader("⭐ Rating Distribution")
-        rating_fig = visualizer.plot_rating_distribution(data)
-        st.plotly_chart(rating_fig, use_container_width=True)
+        st.plotly_chart(viz_data['ratings'], use_container_width=True)
     
     with col4:
         st.subheader("📱 Device Usage")
-        device_fig = visualizer.plot_device_usage(data)
-        st.plotly_chart(device_fig, use_container_width=True)
+        st.plotly_chart(viz_data['devices'], use_container_width=True)
 
 def display_association_rules(data, min_support, min_confidence, min_lift):
-    """Display association rules analysis"""
+    """Display association rules analysis with caching"""
     st.subheader("🔗 Book Association Rules")
     
     with st.spinner("Mining association rules..."):
         try:
-            pattern_miner = PatternMiner()
-            
-            # Get borrow transactions only
-            borrow_data = data[data['action_type'] == 'borrow'].copy()
-            
-            if len(borrow_data) == 0:
-                st.warning("No borrowing transactions found in the data.")
-                return
-            
-            # Generate rules
-            rules_df = pattern_miner.generate_association_rules(
-                borrow_data, min_support, min_confidence, min_lift
+            # Use cached association rules generation
+            rules_df = generate_association_rules_cached(
+                data, min_support, min_confidence, min_lift
             )
             
             if len(rules_df) == 0:
@@ -361,6 +405,7 @@ def display_association_rules(data, min_support, min_confidence, min_lift):
             st.subheader("🌐 Association Rules Network")
             
             if len(rules_df) > 0:
+                pattern_miner = PatternMiner()
                 network_html = pattern_miner.create_network_visualization(rules_df)
                 if network_html:
                     st.components.v1.html(network_html, height=600)
@@ -371,11 +416,11 @@ def display_association_rules(data, min_support, min_confidence, min_lift):
             st.error(f"Error generating association rules: {str(e)}")
 
 def display_insights(data):
-    """Display automated insights"""
+    """Display automated insights with caching"""
     st.subheader("💡 Automated Insights")
     
-    insight_generator = InsightGenerator()
-    insights = insight_generator.generate_insights(data)
+    # Use cached insights generation
+    insights = generate_insights_cached(data)
     
     for insight in insights:
         st.markdown(f"""
@@ -386,22 +431,21 @@ def display_insights(data):
         """, unsafe_allow_html=True)
 
 def display_device_analysis(data):
-    """Display device-specific analysis"""
+    """Display device-specific analysis with cached visualizations"""
     st.subheader("📱 Device Usage Analysis")
     
-    visualizer = Visualizer()
+    # Use cached visualizations
+    viz_data = create_visualizations_cached(data)
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.subheader("Session Duration by Device")
-        session_fig = visualizer.plot_session_duration_by_device(data)
-        st.plotly_chart(session_fig, use_container_width=True)
+        st.plotly_chart(viz_data['session_duration'], use_container_width=True)
     
     with col2:
         st.subheader("Rating by Device Type")
-        device_rating_fig = visualizer.plot_rating_by_device(data)
-        st.plotly_chart(device_rating_fig, use_container_width=True)
+        st.plotly_chart(viz_data['device_ratings'], use_container_width=True)
     
     # Device statistics table
     st.subheader("📊 Device Statistics")
