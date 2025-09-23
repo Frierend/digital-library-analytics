@@ -1,0 +1,51 @@
+book_id,title,author,year
+B000,Introduction to Data Science,John Smith,2020
+B001,Python Programming,Sarah Johnson,2019
+B002,Machine Learning Basics,Michael Brown,2021
+B003,Data Visualization,Emily Davis,2018
+B004,Statistical Analysis,David Wilson,2020
+B005,Deep Learning Fundamentals,Lisa Anderson,2021
+B006,Database Management,Robert Taylor,2019
+B007,Web Development,Jessica Lee,2020
+B008,Computer Networks,William Chen,2018
+B009,Software Engineering,Maria Garcia,2021
+B010,Artificial Intelligence,James Wright,2020
+B011,Cloud Computing,Anna White,2019
+B012,Cybersecurity Basics,Thomas Black,2021
+B013,Mobile Development,Rachel Green,2020
+B014,Operating Systems,Daniel Kim,2019
+B015,Algorithm Design,Sophie Martin,2021
+B016,Computer Architecture,Kevin Park,2018
+B017,Digital Electronics,Laura Hall,2020
+B018,Information Systems,Christopher Lee,2019
+B019,Project Management,Emma Thompson,2021
+B020,Business Analytics,Andrew Clark,2020
+B021,Data Mining,Michelle Wong,2019
+B022,Big Data Processing,Peter Zhang,2021
+B023,Computer Graphics,Nicole Brown,2020
+B024,System Design,Ryan Davis,2019
+B025,Network Security,Jennifer Wilson,2021
+B026,Software Testing,Mark Johnson,2020
+B027,Web Security,Catherine Liu,2019
+B028,Cloud Architecture,Steven Taylor,2021
+B029,Mobile Security,Patricia Chen,2020
+B030,Data Ethics,George Martin,2019
+B031,IoT Fundamentals,Amanda White,2021
+B032,Blockchain Basics,Richard Lee,2020
+B033,Game Development,Susan Park,2019
+B034,Computer Vision,David Kim,2021
+B035,Natural Language Processing,Elizabeth Brown,2020
+B036,Quantum Computing,Michael Garcia,2019
+B037,Robotics Engineering,Sarah Davis,2021
+B038,Edge Computing,James Wilson,2020
+B039,DevOps Practices,Linda Johnson,2019
+B040,Full Stack Development,Thomas Chen,2021
+B041,UI/UX Design,Emily Martin,2020
+B042,Software Architecture,Robert White,2019
+B043,Data Warehousing,Mary Taylor,2021
+B044,Business Intelligence,John Park,2020
+B045,System Administration,Karen Lee,2019
+B046,Computer Ethics,William Brown,2021
+B047,Digital Marketing,Jessica Wilson,2020
+B048,IT Management,Brian Davis,2019
+B049,Tech Innovation,Alice Johnson,2021
