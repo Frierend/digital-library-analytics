@@ -50,11 +50,11 @@ class InsightGenerator:
     def _analyze_basic_stats(self, df):
         """Analyze basic statistics"""
         total_records = len(df)
-        unique_users = df['user_id'].nunique()
-        unique_books = df['book_id'].nunique()
+        unique_users = df['user_id'].nunique() if 'user_id' in df.columns else 0
+        unique_books = df['book_id'].nunique() if 'book_id' in df.columns else 0
         
         # Total borrows
-        total_borrows = len(df[df['action_type'] == 'borrow'])
+        total_borrows = len(df[df['action_type'] == 'borrow']) if 'action_type' in df.columns else 0
         
         self._add_insight(
             "Library Usage Overview",
@@ -64,7 +64,7 @@ class InsightGenerator:
         )
         
         # User engagement
-        if unique_users > 0:
+        if unique_users > 0 and total_records > 0:
             avg_actions_per_user = total_records / unique_users
             if avg_actions_per_user > 10:
                 self._add_insight(
@@ -79,6 +79,31 @@ class InsightGenerator:
                     f"Users show limited engagement with only {avg_actions_per_user:.1f} actions per user on average. Consider implementing engagement strategies.",
                     "User Behavior",
                     "High"
+                )
+            else:
+                self._add_insight(
+                    "Moderate User Engagement",
+                    f"Users show moderate engagement with {avg_actions_per_user:.1f} actions per user on average. There's room for improvement.",
+                    "User Behavior",
+                    "Medium"
+                )
+        
+        # Book utilization
+        if unique_books > 0 and total_borrows > 0:
+            avg_borrows_per_book = total_borrows / unique_books
+            if avg_borrows_per_book < 5:
+                self._add_insight(
+                    "Low Book Utilization",
+                    f"Each book is borrowed only {avg_borrows_per_book:.1f} times on average. Consider promoting underutilized content or reviewing collection relevance.",
+                    "Content Strategy",
+                    "Medium"
+                )
+            else:
+                self._add_insight(
+                    "Good Book Utilization",
+                    f"Each book is borrowed {avg_borrows_per_book:.1f} times on average, indicating good collection utilization.",
+                    "Content Strategy",
+                    "Low"
                 )
     
     def _analyze_temporal_patterns(self, df):

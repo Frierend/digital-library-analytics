@@ -285,97 +285,42 @@ def main():
                     st.sidebar.info("💡 Tip: Make sure both files have 'book_id' column for merging")
     
     if st.session_state.data_loaded:
-        # Sidebar filters
-        st.sidebar.markdown("## 📊 Analysis Parameters")
+        # Analysis Parameters - Simplified for non-technical users
+        st.sidebar.markdown("## ⚙️ Analysis Settings")
         
-        min_support = st.sidebar.slider(
-            "Minimum Support",
-            min_value=0.01,
-            max_value=0.5,
-            value=0.05,
-            step=0.01,
-            help="Minimum support for frequent itemsets"
-        )
-        
-        min_confidence = st.sidebar.slider(
-            "Minimum Confidence", 
-            min_value=0.1,
-            max_value=1.0,
-            value=0.5,
-            step=0.05,
-            help="Minimum confidence for association rules"
-        )
-        
-        min_lift = st.sidebar.slider(
-            "Minimum Lift",
-            min_value=1.0,
-            max_value=5.0,
-            value=1.2,
-            step=0.1,
-            help="Minimum lift for association rules"
-        )
-        
-        # Search functionality with better explanation
-        st.sidebar.markdown("## 🔍 Book Search & Filter")
-        st.sidebar.markdown("""
-        **Purpose**: Filter all data and visualizations to focus on specific books.
-        
-        **How it works**: Enter a book title to see:
-        - How often it's borrowed
-        - What other books are borrowed with it
-        - User ratings and device preferences
-        """)
-        
-        search_term = st.sidebar.text_input(
-            "Search books by title",
-            placeholder="e.g., 'Python', 'Data Science', 'Machine Learning'",
-            help="This will filter all charts and analysis to show only results related to your search term"
-        )
-        
-        if search_term:
-            # Show search preview
-            matching_books = st.session_state.merged_data[
-                st.session_state.merged_data['title'].str.contains(search_term, case=False, na=False)
-            ]['title'].unique()
+        with st.sidebar.expander("🔧 Advanced Parameters", expanded=False):
+            st.markdown("**For Association Rules Mining:**")
+            min_support = st.slider(
+                "Support (Frequency)",
+                min_value=0.01,
+                max_value=0.2,
+                value=0.04,  # Based on your screenshot
+                step=0.01,
+                help="Lower values find more patterns but may include weak relationships"
+            )
             
-            if len(matching_books) > 0:
-                st.sidebar.success(f"✅ Found {len(matching_books)} matching books")
-                with st.sidebar.expander("📚 Preview matching books"):
-                    for book in matching_books[:5]:  # Show first 5
-                        st.write(f"• {book}")
-                    if len(matching_books) > 5:
-                        st.write(f"... and {len(matching_books) - 5} more")
-            else:
-                st.sidebar.warning("❌ No books found matching your search")
+            min_confidence = st.slider(
+                "Confidence (Reliability)", 
+                min_value=0.1,
+                max_value=1.0,
+                value=0.5,
+                step=0.05,
+                help="Higher values show only very reliable patterns"
+            )
+            
+            min_lift = st.slider(
+                "Lift (Strength)",
+                min_value=1.0,
+                max_value=5.0,
+                value=1.2,
+                step=0.1,
+                help="Values > 1.0 indicate positive relationships"
+            )
         
-        # Clear search button
-        if search_term and st.sidebar.button("🗑️ Clear Search"):
-            st.rerun()
-        
-        # Main content with improved tab structure
-        display_data = st.session_state.merged_data.copy()
-        if search_term:
-            display_data = st.session_state.merged_data[
-                st.session_state.merged_data['title'].str.contains(search_term, case=False, na=False)
-            ]
-        
-        tab1, tab2, tab3, tab4 = st.tabs(["📊 Dashboard", "🔗 Association Rules", "💡 Insights", "📱 Device Analysis"])
-        
-        with tab1:
-            display_dashboard_content(display_data, min_support, min_confidence, min_lift, search_term)
-        
-        with tab2:
-            display_association_rules(display_data, min_support, min_confidence, min_lift)
-        
-        with tab3:
-            display_insights(display_data)
-        
-        with tab4:
-            display_device_analysis(display_data)
-        
+        # Simplified search - removed from here since it's now in dashboard
         # Export functionality
-        st.sidebar.markdown("## 📤 Export Results")
-        if st.sidebar.button("Download Analysis Results"):
+        st.sidebar.markdown("## 📤 Export")
+        if st.sidebar.button("📥 Download Results", use_container_width=True):
             export_results(st.session_state.merged_data)
     
     else:
@@ -432,83 +377,102 @@ def display_dashboard_content(data, min_support, min_confidence, min_lift, searc
     # Breadcrumb navigation
     st.markdown('<div class="breadcrumb">🏠 Home > 📊 Dashboard</div>', unsafe_allow_html=True)
     
-    # Filter data if search term is provided
-    display_data = data.copy()
-    if search_term:
-        display_data = data[data['title'].str.contains(search_term, case=False, na=False)]
-        st.info(f"🔍 Showing results for: '{search_term}' ({len(display_data)} records)")
-    
-    # Interactive feature highlights instead of just numbers
+    # Interactive feature highlights
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        total_borrows = len(display_data[display_data['action_type'] == 'borrow'])
-        st.markdown(f"""
-        <div class="feature-card">
-            <h4>📊 Total Library Activity</h4>
-            <h3>{total_borrows:,} Borrows</h3>
-            <p>Click "Association Rules" to discover reading patterns</p>
-        </div>
-        """, unsafe_allow_html=True)
+        total_borrows = len(data[data['action_type'] == 'borrow'])
+        if st.button(f"📊 {total_borrows:,} Total Borrows", use_container_width=True, help="Click to explore association rules"):
+            st.session_state.switch_to_tab = "Association Rules"
     
     with col2:
-        unique_users = display_data['user_id'].nunique()
-        st.markdown(f"""
-        <div class="feature-card">
-            <h4>👥 Active Community</h4>
-            <h3>{unique_users:,} Users</h3>
-            <p>View "Device Analysis" for user behavior insights</p>
-        </div>
-        """, unsafe_allow_html=True)
+        unique_users = data['user_id'].nunique()
+        if st.button(f"👥 {unique_users:,} Active Users", use_container_width=True, help="Click to view insights"):
+            st.session_state.switch_to_tab = "Insights"
     
     with col3:
-        unique_books = display_data['book_id'].nunique()
+        unique_books = data['book_id'].nunique()
         st.markdown(f"""
-        <div class="feature-card">
-            <h4>📚 Book Collection</h4>
-            <h3>{unique_books:,} Titles</h3>
-            <p>Search specific books using the sidebar</p>
+        <div style="text-align: center; padding: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px;">
+            <strong>📚 {unique_books:,} Unique Books</strong>
         </div>
         """, unsafe_allow_html=True)
     
     with col4:
-        avg_rating = display_data['rating'].mean()
+        avg_rating = data['rating'].mean() if 'rating' in data.columns and not data['rating'].isna().all() else 0
         st.markdown(f"""
-        <div class="feature-card">
-            <h4>⭐ Quality Score</h4>
-            <h3>{avg_rating:.1f}/5.0</h3>
-            <p>Check "Insights" for detailed quality analysis</p>
+        <div style="text-align: center; padding: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px;">
+            <strong>⭐ {avg_rating:.1f} Avg Rating</strong>
         </div>
         """, unsafe_allow_html=True)
+    
+    # Filter data if search term is provided
+    display_data = data.copy()
+    if search_term:
+        display_data = data[data['title'].str.contains(search_term, case=False, na=False)]
+        st.info(f"🔍 Filtered to {len(display_data)} records matching '{search_term}'")
     
     # Main dashboard content
     st.markdown("---")
     display_dashboard_charts(display_data)
 
 def display_dashboard_charts(data):
-    """Display dashboard charts using cached visualizations"""
+    """Display dashboard charts with integrated search"""
     
-    # Use cached visualizations
-    viz_data = create_visualizations_cached(data)
+    # Search functionality moved to be more contextual
+    st.markdown("### 🔍 Filter Analysis")
+    search_col1, search_col2 = st.columns([3, 1])
+    
+    with search_col1:
+        search_input = st.text_input(
+            "Search books to filter all charts below:",
+            placeholder="e.g., 'Security', 'Management', 'Development'",
+            key="dashboard_search"
+        )
+    
+    with search_col2:
+        if st.button("🗑️ Clear", key="clear_search"):
+            st.session_state.dashboard_search = ""
+            st.rerun()
+    
+    # Apply search filter
+    filtered_data = data.copy()
+    if search_input:
+        filtered_data = data[data['title'].str.contains(search_input, case=False, na=False)]
+        if len(filtered_data) == 0:
+            st.warning(f"No books found matching '{search_input}'. Showing all data.")
+            filtered_data = data
+        else:
+            st.success(f"Found {len(filtered_data)} records matching '{search_input}'")
+    
+    # Charts section
+    st.markdown("### 📊 Library Analytics")
+    
+    # Use cached visualizations with filtered data
+    viz_data = create_visualizations_cached(filtered_data)
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📚 Top Borrowed Books")
+        st.markdown("**📚 Most Popular Books**")
+        st.markdown("*Books with the most actual borrows (not previews)*")
         st.plotly_chart(viz_data['top_books'], use_container_width=True)
     
     with col2:
-        st.subheader("📈 Borrowing Trends Over Time")
+        st.markdown("**📈 Activity Timeline**")
+        st.markdown("*Daily borrowing activity over time*")
         st.plotly_chart(viz_data['trends'], use_container_width=True)
     
     col3, col4 = st.columns(2)
     
     with col3:
-        st.subheader("⭐ Rating Distribution")
+        st.markdown("**⭐ User Satisfaction**")
+        st.markdown("*Distribution of user ratings (1-5 stars)*")
         st.plotly_chart(viz_data['ratings'], use_container_width=True)
     
     with col4:
-        st.subheader("📱 Device Usage")
+        st.markdown("**📱 Access Methods**")
+        st.markdown("*How users access the library*")
         st.plotly_chart(viz_data['devices'], use_container_width=True)
 
 def display_association_rules(data, min_support, min_confidence, min_lift):
@@ -562,7 +526,20 @@ def display_association_rules(data, min_support, min_confidence, min_lift):
             
             # Display rules table (PRE-SORTED by Lift descending)
             st.subheader("📋 Association Rules Table")
-            st.markdown("*Automatically sorted by Lift (strongest relationships first)*")
+            st.markdown("**How to read this table:**")
+            st.markdown("""
+            - **Antecedents** (If user borrows): The book(s) borrowed first
+            - **Consequents** (Then they also borrow): The book(s) likely borrowed together  
+            - **Support**: How often these books appear together (higher = more common)
+            - **Confidence**: Reliability of the rule (higher = more predictable)
+            - **Lift**: Strength of relationship (higher = stronger association)
+            - **Table is automatically sorted by Lift** (strongest patterns first)
+            """)
+            
+            # Example interpretation
+            if len(display_rules) > 0:
+                first_rule = display_rules.iloc[0]
+                st.info(f"**Example**: If users borrow '{first_rule['antecedents']}', they are {first_rule['lift']:.1f}x more likely to also borrow '{first_rule['consequents']}' than by random chance.")
             
             # Format and sort the rules
             display_rules = rules_df.copy()
