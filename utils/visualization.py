@@ -21,41 +21,58 @@ class Visualizer:
         }
     
     def plot_top_borrowed_books(self, df, top_n=10):
-        """Create bar chart of top borrowed books"""
-        # Filter for borrow actions
+        """Create bar chart of top borrowed books with improved clarity"""
+        # Filter for borrow actions only (consistent with association rules)
         borrow_df = df[df['action_type'] == 'borrow'].copy()
         
         if len(borrow_df) == 0:
             return self._create_empty_plot("No borrowing data available")
         
-        # Count borrows per book
+        # Count borrows per book title (not book_id)
         book_counts = borrow_df['title'].value_counts().head(top_n)
         
         if len(book_counts) == 0:
             return self._create_empty_plot("No book data available")
         
-        # Create bar chart
+        # Create horizontal bar chart with better formatting
         fig = px.bar(
             x=book_counts.values,
             y=book_counts.index,
             orientation='h',
-            title=f"Top {top_n} Most Borrowed Books",
-            labels={'x': 'Number of Borrows', 'y': 'Book Title'},
+            title=f"Top {top_n} Most Borrowed Books (Actual Borrows Only)",
+            labels={'x': 'Number of Times Borrowed', 'y': 'Book Title'},
             color=book_counts.values,
-            color_continuous_scale='viridis'
+            color_continuous_scale='viridis',
+            text=book_counts.values  # Add value labels
         )
         
+        # Improve layout
         fig.update_layout(
-            height=400,
+            height=max(400, top_n * 40),  # Dynamic height based on number of books
             yaxis={'categoryorder': 'total ascending'},
             showlegend=False,
-            plot_bgcolor=self.theme['background_color']
+            plot_bgcolor='white',
+            xaxis_title="Number of Borrows",
+            yaxis_title="Book Title",
+            font=dict(size=12)
+        )
+        
+        # Add value labels on bars
+        fig.update_traces(
+            texttemplate='%{text}',
+            textposition='outside',
+            textfont_size=10
+        )
+        
+        # Improve hover information
+        fig.update_traces(
+            hovertemplate='<b>%{y}</b><br>Borrowed %{x} times<extra></extra>'
         )
         
         return fig
     
     def plot_borrowing_trends(self, df):
-        """Create line chart of borrowing trends over time"""
+        """Create improved line chart of borrowing trends over time"""
         borrow_df = df[df['action_type'] == 'borrow'].copy()
         
         if len(borrow_df) == 0 or 'borrow_timestamp' not in borrow_df.columns:
@@ -67,23 +84,74 @@ class Visualizer:
         if len(borrow_df) == 0:
             return self._create_empty_plot("No valid timestamp data available")
         
-        # Group by date
+        # Group by date and count
         daily_borrows = borrow_df.groupby(borrow_df['borrow_timestamp'].dt.date).size().reset_index()
         daily_borrows.columns = ['date', 'borrows']
         
-        # Create line chart
-        fig = px.line(
-            daily_borrows,
-            x='date',
-            y='borrows',
-            title='Daily Borrowing Trends',
-            labels={'date': 'Date', 'borrows': 'Number of Borrows'}
+        # Calculate moving average for smoother trend
+        if len(daily_borrows) > 7:
+            daily_borrows['moving_avg'] = daily_borrows['borrows'].rolling(window=7, center=True).mean()
+        
+        # Create improved line chart
+        fig = go.Figure()
+        
+        # Add main trend line
+        fig.add_trace(go.Scatter(
+            x=daily_borrows['date'],
+            y=daily_borrows['borrows'],
+            mode='lines+markers',
+            name='Daily Borrows',
+            line=dict(color='#2E86AB', width=2),
+            marker=dict(size=6, color='#2E86AB'),
+            hovertemplate='<b>%{x}</b><br>Borrows: %{y}<extra></extra>'
+        ))
+        
+        # Add moving average if available
+        if 'moving_avg' in daily_borrows.columns:
+            fig.add_trace(go.Scatter(
+                x=daily_borrows['date'],
+                y=daily_borrows['moving_avg'],
+                mode='lines',
+                name='7-Day Average',
+                line=dict(color='#FF6B6B', width=2, dash='dot'),
+                hovertemplate='<b>%{x}</b><br>7-Day Avg: %{y:.1f}<extra></extra>'
+            ))
+        
+        # Improve layout
+        fig.update_layout(
+            title='Daily Borrowing Trends Over Time',
+            xaxis_title='Date',
+            yaxis_title='Number of Borrows',
+            height=400,
+            plot_bgcolor='white',
+            hovermode='x unified',
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            )
         )
         
-        fig.update_traces(line_color='#2E86AB', line_width=3)
-        fig.update_layout(
-            height=400,
-            plot_bgcolor=self.theme['background_color']
+        # Add grid for better readability
+        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
+        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
+        
+        # Add annotations for highest and lowest points
+        max_idx = daily_borrows['borrows'].idxmax()
+        min_idx = daily_borrows['borrows'].idxmin()
+        
+        fig.add_annotation(
+            x=daily_borrows.iloc[max_idx]['date'],
+            y=daily_borrows.iloc[max_idx]['borrows'],
+            text=f"Peak: {daily_borrows.iloc[max_idx]['borrows']} borrows",
+            showarrow=True,
+            arrowhead=2,
+            arrowcolor='green',
+            bgcolor='lightgreen',
+            bordercolor='green'
         )
         
         return fig
