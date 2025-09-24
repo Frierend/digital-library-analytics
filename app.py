@@ -76,7 +76,7 @@ def create_visualizations_cached(_data):
     
     return viz_data
 
-# Custom CSS for better design consistency
+# Custom CSS for better design consistency and fixed alignment
 st.markdown("""
 <style>
     /* Remove default padding and margins */
@@ -98,56 +98,77 @@ st.markdown("""
         border-radius: 10px;
     }
     
-    /* Improved metric containers */
-    .metric-container {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1.2rem;
-        border-radius: 12px;
-        color: white;
-        text-align: center;
-        margin: 0.5rem 0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s ease;
+    /* 🔑 FIX: Force Streamlit columns to have equal heights */
+    [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        align-items: stretch !important;
+        gap: 1rem;
     }
     
-    .metric-container:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    [data-testid="stHorizontalBlock"] > div {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
     }
     
-    .metric-container h3 {
-        margin: 0;
-        font-size: 2rem;
-        font-weight: bold;
+    [data-testid="stHorizontalBlock"] > div > div {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
     }
-    
-    .metric-container p {
-        margin: 0.5rem 0 0 0;
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-    
-    /* Interactive feature cards */
-    .feature-card {
-        background: white;
-        border: 2px solid #e9ecef;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-    }
-    
-    .feature-card:hover {
-        border-color: #2E86AB;
-        box-shadow: 0 4px 12px rgba(46, 134, 171, 0.15);
-        transform: translateY(-1px);
-    }
-    
-    .feature-card h4 {
-        color: #2E86AB;
-        margin-bottom: 0.5rem;
-    }
+
+    /* Alternative: More spacious version */
+.feature-card {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem 1rem; /* More padding */
+    margin: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around; /* Even better space distribution */
+    align-items: center;
+    text-align: center;
+    min-height: 160px;
+}
+
+.feature-card h4 {
+    color: #2E86AB;
+    margin: 0.2rem 0; /* Balanced margins */
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.5rem;
+}
+
+.feature-card h3 {
+    margin: 0.2rem 0; /* More space around the number */
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #333;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.feature-card p {
+    margin: 0.3rem 0; /* Balanced margins */
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 0.5rem;
+}
     
     /* Insight boxes */
     .insight-box {
@@ -223,6 +244,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 def main():
     st.markdown('<h1 class="main-header">📚 Digital Library Analytics Dashboard</h1>', unsafe_allow_html=True)
     
@@ -285,42 +307,97 @@ def main():
                     st.sidebar.info("💡 Tip: Make sure both files have 'book_id' column for merging")
     
     if st.session_state.data_loaded:
-        # Analysis Parameters - Simplified for non-technical users
-        st.sidebar.markdown("## ⚙️ Analysis Settings")
+        # Sidebar filters
+        st.sidebar.markdown("## 📊 Analysis Parameters")
         
-        with st.sidebar.expander("🔧 Advanced Parameters", expanded=False):
-            st.markdown("**For Association Rules Mining:**")
-            min_support = st.slider(
-                "Support (Frequency)",
-                min_value=0.01,
-                max_value=0.2,
-                value=0.04,  # Based on your screenshot
-                step=0.01,
-                help="Lower values find more patterns but may include weak relationships"
-            )
-            
-            min_confidence = st.slider(
-                "Confidence (Reliability)", 
-                min_value=0.1,
-                max_value=1.0,
-                value=0.5,
-                step=0.05,
-                help="Higher values show only very reliable patterns"
-            )
-            
-            min_lift = st.slider(
-                "Lift (Strength)",
-                min_value=1.0,
-                max_value=5.0,
-                value=1.2,
-                step=0.1,
-                help="Values > 1.0 indicate positive relationships"
-            )
+        min_support = st.sidebar.slider(
+            "Minimum Support",
+            min_value=0.01,
+            max_value=0.5,
+            value=0.05,
+            step=0.01,
+            help="Minimum support for frequent itemsets"
+        )
         
-        # Simplified search - removed from here since it's now in dashboard
+        min_confidence = st.sidebar.slider(
+            "Minimum Confidence", 
+            min_value=0.1,
+            max_value=1.0,
+            value=0.5,
+            step=0.05,
+            help="Minimum confidence for association rules"
+        )
+        
+        min_lift = st.sidebar.slider(
+            "Minimum Lift",
+            min_value=1.0,
+            max_value=5.0,
+            value=1.2,
+            step=0.1,
+            help="Minimum lift for association rules"
+        )
+        
+        # Search functionality with better explanation
+        st.sidebar.markdown("## 🔍 Book Search & Filter")
+        st.sidebar.markdown("""
+        **Purpose**: Filter all data and visualizations to focus on specific books.
+        
+        **How it works**: Enter a book title to see:
+        - How often it's borrowed
+        - What other books are borrowed with it
+        - User ratings and device preferences
+        """)
+        
+        search_term = st.sidebar.text_input(
+            "Search books by title",
+            placeholder="e.g., 'Python', 'Data Science', 'Machine Learning'",
+            help="This will filter all charts and analysis to show only results related to your search term"
+        )
+        
+        if search_term:
+            # Show search preview
+            matching_books = st.session_state.merged_data[
+                st.session_state.merged_data['title'].str.contains(search_term, case=False, na=False)
+            ]['title'].unique()
+            
+            if len(matching_books) > 0:
+                st.sidebar.success(f"✅ Found {len(matching_books)} matching books")
+                with st.sidebar.expander("📚 Preview matching books"):
+                    for book in matching_books[:5]:  # Show first 5
+                        st.write(f"• {book}")
+                    if len(matching_books) > 5:
+                        st.write(f"... and {len(matching_books) - 5} more")
+            else:
+                st.sidebar.warning("❌ No books found matching your search")
+        
+        # Clear search button
+        if search_term and st.sidebar.button("🗑️ Clear Search"):
+            st.rerun()
+        
+        # Main content with improved tab structure
+        display_data = st.session_state.merged_data.copy()
+        if search_term:
+            display_data = st.session_state.merged_data[
+                st.session_state.merged_data['title'].str.contains(search_term, case=False, na=False)
+            ]
+        
+        tab1, tab2, tab3, tab4 = st.tabs(["📊 Dashboard", "🔗 Association Rules", "💡 Insights", "📱 Device Analysis"])
+        
+        with tab1:
+            display_dashboard_content(display_data, min_support, min_confidence, min_lift, search_term)
+        
+        with tab2:
+            display_association_rules(display_data, min_support, min_confidence, min_lift)
+        
+        with tab3:
+            display_insights(display_data)
+        
+        with tab4:
+            display_device_analysis(display_data)
+        
         # Export functionality
-        st.sidebar.markdown("## 📤 Export")
-        if st.sidebar.button("📥 Download Results", use_container_width=True):
+        st.sidebar.markdown("## 📤 Export Results")
+        if st.sidebar.button("Download Analysis Results"):
             export_results(st.session_state.merged_data)
     
     else:
@@ -372,107 +449,94 @@ def main():
     """, unsafe_allow_html=True)
 
 def display_dashboard_content(data, min_support, min_confidence, min_lift, search_term):
-    """Display the dashboard content only (without tabs)"""
+    """Display the dashboard content with properly aligned metric cards"""
     
     # Breadcrumb navigation
     st.markdown('<div class="breadcrumb">🏠 Home > 📊 Dashboard</div>', unsafe_allow_html=True)
-    
-    # Interactive feature highlights
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        total_borrows = len(data[data['action_type'] == 'borrow'])
-        if st.button(f"📊 {total_borrows:,} Total Borrows", use_container_width=True, help="Click to explore association rules"):
-            st.session_state.switch_to_tab = "Association Rules"
-    
-    with col2:
-        unique_users = data['user_id'].nunique()
-        if st.button(f"👥 {unique_users:,} Active Users", use_container_width=True, help="Click to view insights"):
-            st.session_state.switch_to_tab = "Insights"
-    
-    with col3:
-        unique_books = data['book_id'].nunique()
-        st.markdown(f"""
-        <div style="text-align: center; padding: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px;">
-            <strong>📚 {unique_books:,} Unique Books</strong>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        avg_rating = data['rating'].mean() if 'rating' in data.columns and not data['rating'].isna().all() else 0
-        st.markdown(f"""
-        <div style="text-align: center; padding: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px;">
-            <strong>⭐ {avg_rating:.1f} Avg Rating</strong>
-        </div>
-        """, unsafe_allow_html=True)
     
     # Filter data if search term is provided
     display_data = data.copy()
     if search_term:
         display_data = data[data['title'].str.contains(search_term, case=False, na=False)]
-        st.info(f"🔍 Filtered to {len(display_data)} records matching '{search_term}'")
+        st.info(f"🔍 Showing results for: '{search_term}' ({len(display_data)} records)")
+    
+    # Create perfectly aligned metric cards
+    col1, col2, col3, col4 = st.columns(4)
+
+    # Calculate metrics
+    total_borrows = len(display_data[display_data['action_type'] == 'borrow'])
+    unique_users = display_data['user_id'].nunique()
+    unique_books = display_data['book_id'].nunique()
+    avg_rating = display_data['rating'].mean()
+
+    with col1:
+        st.markdown(f"""
+    <div class="feature-card">
+        <h4>📊 Total Activity</h4>
+        <h3>{total_borrows:,}</h3>
+        <p>Actual borrows only</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+    <div class="feature-card">
+        <h4>👥 Active Users</h4>
+        <h3>{unique_users:,}</h3>
+        <p>Unique borrowers</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown(f"""
+    <div class="feature-card">
+        <h4>📚 Unique Books</h4>
+        <h3>{unique_books:,}</h3>
+        <p>Available in library</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with col4:
+        st.markdown(f"""
+    <div class="feature-card">
+        <h4>⭐ Avg Rating</h4>
+        <h3>{avg_rating:.1f}/5.0</h3>
+        <p>User satisfaction</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    
+    # Add some spacing
+    st.markdown("<br>", unsafe_allow_html=True)
     
     # Main dashboard content
     st.markdown("---")
     display_dashboard_charts(display_data)
 
 def display_dashboard_charts(data):
-    """Display dashboard charts with integrated search"""
+    """Display dashboard charts using cached visualizations"""
     
-    # Search functionality moved to be more contextual
-    st.markdown("### 🔍 Filter Analysis")
-    search_col1, search_col2 = st.columns([3, 1])
-    
-    with search_col1:
-        search_input = st.text_input(
-            "Search books to filter all charts below:",
-            placeholder="e.g., 'Security', 'Management', 'Development'",
-            key="dashboard_search"
-        )
-    
-    with search_col2:
-        if st.button("🗑️ Clear", key="clear_search"):
-            st.session_state.dashboard_search = ""
-            st.rerun()
-    
-    # Apply search filter
-    filtered_data = data.copy()
-    if search_input:
-        filtered_data = data[data['title'].str.contains(search_input, case=False, na=False)]
-        if len(filtered_data) == 0:
-            st.warning(f"No books found matching '{search_input}'. Showing all data.")
-            filtered_data = data
-        else:
-            st.success(f"Found {len(filtered_data)} records matching '{search_input}'")
-    
-    # Charts section
-    st.markdown("### 📊 Library Analytics")
-    
-    # Use cached visualizations with filtered data
-    viz_data = create_visualizations_cached(filtered_data)
+    # Use cached visualizations
+    viz_data = create_visualizations_cached(data)
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("**📚 Most Popular Books**")
-        st.markdown("*Books with the most actual borrows (not previews)*")
+        st.subheader("📚 Top Borrowed Books")
         st.plotly_chart(viz_data['top_books'], use_container_width=True)
     
     with col2:
-        st.markdown("**📈 Activity Timeline**")
-        st.markdown("*Daily borrowing activity over time*")
+        st.subheader("📈 Borrowing Trends Over Time")
         st.plotly_chart(viz_data['trends'], use_container_width=True)
     
     col3, col4 = st.columns(2)
     
     with col3:
-        st.markdown("**⭐ User Satisfaction**")
-        st.markdown("*Distribution of user ratings (1-5 stars)*")
+        st.subheader("⭐ Rating Distribution")
         st.plotly_chart(viz_data['ratings'], use_container_width=True)
     
     with col4:
-        st.markdown("**📱 Access Methods**")
-        st.markdown("*How users access the library*")
+        st.subheader("📱 Device Usage")
         st.plotly_chart(viz_data['devices'], use_container_width=True)
 
 def display_association_rules(data, min_support, min_confidence, min_lift):
@@ -526,20 +590,7 @@ def display_association_rules(data, min_support, min_confidence, min_lift):
             
             # Display rules table (PRE-SORTED by Lift descending)
             st.subheader("📋 Association Rules Table")
-            st.markdown("**How to read this table:**")
-            st.markdown("""
-            - **Antecedents** (If user borrows): The book(s) borrowed first
-            - **Consequents** (Then they also borrow): The book(s) likely borrowed together  
-            - **Support**: How often these books appear together (higher = more common)
-            - **Confidence**: Reliability of the rule (higher = more predictable)
-            - **Lift**: Strength of relationship (higher = stronger association)
-            - **Table is automatically sorted by Lift** (strongest patterns first)
-            """)
-            
-            # Example interpretation
-            if len(display_rules) > 0:
-                first_rule = display_rules.iloc[0]
-                st.info(f"**Example**: If users borrow '{first_rule['antecedents']}', they are {first_rule['lift']:.1f}x more likely to also borrow '{first_rule['consequents']}' than by random chance.")
+            st.markdown("*Automatically sorted by Lift (strongest relationships first)*")
             
             # Format and sort the rules
             display_rules = rules_df.copy()
@@ -578,8 +629,10 @@ def display_association_rules(data, min_support, min_confidence, min_lift):
             
             # Top 5 strongest rules highlight
             st.subheader("🏆 Top 5 Strongest Relationships")
-            top_5 = display_rules.head(5)
-            
+
+            # Reset index to ensure proper ordering and create a clean rule number
+            top_5 = display_rules.head(5).reset_index(drop=True)
+
             for idx, rule in top_5.iterrows():
                 st.markdown(f"""
                 <div class="insight-box">
