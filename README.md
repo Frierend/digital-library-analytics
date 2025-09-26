@@ -10,16 +10,17 @@ Simply upload your CSV files and start exploring your library data insights imme
 
 ## 🎯 Features
 
-- **📊 Interactive Dashboard**: Real-time visualizations of borrowing trends, user behavior, and book popularity
+- **📊 Interactive Dashboard**: Real-time visualizations of borrowing trends, user behavior, and book popularity with metric cards
+- **🔍 Book Search**: Explore individual books with transactions, analytics, and personalized recommendations
 - **🔗 Association Rule Mining**: Discover book recommendation relationships using Apriori/FP-Growth algorithms
-- **💡 AI-Powered Insights**: Automated analysis with actionable recommendations for library improvement
+- **💡 AI-Powered Insights**: Automated analysis with priority-based actionable recommendations for library improvement
 - **📱 Cross-Device Analysis**: Understand user behavior across desktop, mobile, and tablet devices
 - **⭐ Quality Analytics**: Analyze user satisfaction and book rating patterns
 - **📈 Temporal Patterns**: Identify peak usage times, seasonal trends, and borrowing patterns
 - **🌐 Interactive Network Graphs**: Visual representation of book association networks
-- **🔍 Smart Search & Filtering**: Filter all analysis by specific books or topics
+- **🔍 Smart Search & Filtering**: Filter analysis by specific books or topics
 - **📤 Export Functionality**: Download processed data and analysis reports
-- **⚡ High Performance**: Optimized with Streamlit caching for fast loading
+- **⚡ High Performance**: Optimized with Streamlit caching and theme-adaptive UI for fast loading
 
 ## 🚀 Quick Start
 
@@ -27,7 +28,7 @@ Simply upload your CSV files and start exploring your library data insights imme
 1. Visit [https://digital-library-analytics-htp3yvnrcxs7d33my8yqqw.streamlit.app/](https://digital-library-analytics-htp3yvnrcxs7d33my8yqqw.streamlit.app/)
 2. Upload your `digital_library_dataset.csv` and `metadata.csv` files
 3. Click "🔄 Load & Process Data"
-4. Explore the four analysis tabs: Dashboard, Association Rules, Insights, and Device Analysis
+4. Explore the five analysis tabs: Dashboard, Book Search, Association Rules, Insights, and Device Analysis
 
 ### Option 2: Run Locally
 ```bash
@@ -106,6 +107,13 @@ digital_library_project/
 - **Borrowing Trends**: Time series analysis with moving averages and peak annotations
 - **Rating Distribution**: User satisfaction analysis across the collection
 - **Device Usage**: Cross-platform usage patterns
+
+### 🔍 Book Search
+- **Individual Book Analytics**: View detailed borrowing transactions and metrics for specific books
+- **Personalized Recommendations**: Discover books that users who borrowed this one also tend to borrow
+- **Device Distribution**: Analyze how different devices are used for specific books
+- **Top Users**: Identify the most active borrowers for each book
+- **Association-Based Suggestions**: Recommendations powered by association rules
 
 ### 🔗 Association Rules
 - **Automated Rule Mining**: Uses Apriori and FP-Growth algorithms
@@ -198,12 +206,21 @@ scikit-learn>=1.3.0
 
 ### Basic Analysis Workflow
 1. **Upload Data**: Use the sidebar to upload your CSV files
-2. **Process**: Click "🔄 Load & Process Data" 
+2. **Process**: Click "🔄 Load & Process Data"
 3. **Explore Dashboard**: View key metrics and trends
 4. **Discover Patterns**: Check Association Rules for book relationships
 5. **Get Insights**: Review automated insights and recommendations
 6. **Analyze Devices**: Understand cross-platform user behavior
 7. **Export Results**: Download processed data and reports
+
+### Book Search Workflow
+1. **Navigate to Book Search Tab**: After loading data, click on the "🔍 Book Search" tab
+2. **Browse Library**: View the full list of books sorted by popularity
+3. **Search or Select**: Use the search box to filter books or select from the dropdown
+4. **View Transactions**: Examine borrowing history and user details for the selected book
+5. **Analyze Metrics**: Review key statistics like total borrows, unique users, and average rating
+6. **Explore Recommendations**: See personalized book suggestions based on association rules
+7. **Device Insights**: Understand how different devices are used for this book
 
 ### Advanced Features
 - **Parameter Tuning**: Adjust support, confidence, and lift thresholds for different rule sensitivity
@@ -247,6 +264,16 @@ The application includes optimized settings in `.streamlit/config.toml`:
 - Verify CSV file format and required columns
 - Check for special characters in file names
 - Ensure files are not corrupted or empty
+
+**Caching Errors**
+- Clear Streamlit cache: `streamlit cache clear` or restart the app
+- Check for sufficient disk space for cache storage
+- Ensure data files haven't changed during processing
+
+**Theme Detection Issues**
+- The app automatically adapts to light/dark themes
+- If UI elements appear incorrectly, refresh the page
+- Theme changes may require a full page reload
 
 ### Data Quality Tips
 - Remove or handle missing values in key columns
