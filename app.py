@@ -104,6 +104,17 @@ def get_native_css():
             border-radius: 12px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
             color: var(--text-color) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+        
+        /* Ensure no hanging elements */
+        .main .block-container > div:empty {
+            display: none !important;
+        }
+        
+        /* Remove any stray containers */
+        .stContainer:empty {
+            display: none !important;
         }
         
         /* General text sizing for consistency */
@@ -435,23 +446,25 @@ def main():
     st.markdown('<h1 class="main-header">📚 Digital Library Analytics Dashboard</h1>', unsafe_allow_html=True)
     
     # Sidebar - Always present, but content varies
-    st.sidebar.markdown("## 📂 Data Upload")
-    
+    st.sidebar.markdown("## Data Input")
+
+    st.sidebar.markdown("**Please upload your library data files to initiate analysis.**")
+
     # File upload (only show button if files are selected)
     library_file = st.sidebar.file_uploader(
-        "Upload Digital Library Dataset",
+        "Library Dataset (CSV)",
         type=['csv'],
-        help="Upload your digital_library_dataset.csv file"
+        help="Upload the digital_library_dataset.csv file containing borrowing transactions"
     )
-    
+
     metadata_file = st.sidebar.file_uploader(
-        "Upload Metadata",
+        "Book Metadata (CSV)",
         type=['csv'],
-        help="Upload your metadata.csv file"
+        help="Upload the metadata.csv file containing book information (titles, authors, etc.)"
     )
-    
+
     if library_file and metadata_file and not st.session_state.data_loaded:
-        if st.sidebar.button("🔄 Load & Process Data", type="primary"):  # Make it prominent
+        if st.sidebar.button("Process Data", type="primary"):  # Make it prominent
             with st.spinner("Processing data..."):
                 try:
                     # Convert uploaded files to string content for caching
@@ -471,14 +484,12 @@ def main():
                     total_records = len(merged_data)
                     merge_success_rate = (books_with_metadata / total_records) * 100
                     
-                    st.sidebar.success("✅ Data loaded successfully!")
-                    st.sidebar.success(f"📈 Merge success: {merge_success_rate:.1f}% of records have book metadata")
+                    st.sidebar.success("Data processing completed successfully.")
+                    st.sidebar.success(f"Data integration successful: {merge_success_rate:.1f}% of records contain book metadata.")
                     
                     if merge_success_rate < 90:
-                        missing_books = merged_data[merged_data['title'].isna()]['book_id'].nunique()
-                        st.sidebar.warning(f"⚠️ {missing_books} book IDs from library dataset not found in metadata")
-                    
-                    st.rerun()  # Rerun to update the UI and show tabs
+                        st.rerun()  # Rerun to update the UI and show tabs
+                        st.sidebar.warning(f"Note: {missing_books} book identifiers from the library dataset were not found in the metadata.")
                     
                 except Exception as e:
                     st.sidebar.error(f"❌ Error loading data: {str(e)}")
@@ -486,7 +497,7 @@ def main():
     
     if st.session_state.data_loaded:
         # Sidebar filters (shown only after data load)
-        st.sidebar.markdown("## 📊 Analysis Parameters")
+        st.sidebar.markdown("## Analysis Configuration")
         
         min_support = st.sidebar.slider(
             "Minimum Support",
@@ -536,34 +547,38 @@ def main():
             display_device_analysis(display_data)
         
         # Export functionality (only after data loaded)
-        st.sidebar.markdown("## 📤 Export Results")
+        st.sidebar.markdown("## Data Export")
         if st.sidebar.button("Download Analysis Results"):
             export_results(st.session_state.merged_data)
     
     else:
         # Landing Page: Welcome message (only shown pre-load, centered and isolated)
         st.markdown('<div class="landing-container">', unsafe_allow_html=True)
+
+        st.markdown("## Welcome to Digital Library Analytics! 📖")
+
         st.markdown("""
-        <h2>Welcome to Digital Library Analytics! 📖</h2>
-        
-        <p>This application helps you analyze borrowing patterns and generate book recommendations from your digital library data.</p>
-        
-        <h3>To get started:</h3>
-        <ol>
-            <li>Upload your <code>digital_library_dataset.csv</code> file in the sidebar</li>
-            <li>Upload your <code>metadata.csv</code> file in the sidebar</li>
-            <li>Click "Load & Process Data" to begin analysis</li>
-        </ol>
-        
-        <h3>Features:</h3>
-        <ul>
-            <li><strong>📊 Dashboard</strong>: Visualize borrowing trends and patterns</li>
-            <li><strong>🔍 Book Search</strong>: Explore individual books, their borrows, and analytics</li>
-            <li><strong>🔗 Association Rules</strong>: Discover book recommendation relationships</li>
-            <li><strong>💡 Insights</strong>: Get automatic insights from your data</li>
-            <li><strong>📱 Device Analysis</strong>: Understand user behavior across devices</li>
-        </ul>
-        """, unsafe_allow_html=True)
+        This comprehensive application helps you analyze borrowing patterns, discover book recommendations,
+        and gain deep insights into your digital library data.
+        """)
+
+        st.markdown("### To get started:")
+        st.markdown("""
+        1. Upload your `digital_library_dataset.csv` file in the sidebar
+        2. Upload your `metadata.csv` file in the sidebar
+        3. Click "🔄 Load & Process Data" to begin analysis
+        """)
+
+        st.markdown("### Features:")
+        st.markdown("""
+        - **📊 Dashboard**: Interactive metrics and visualizations of borrowing trends
+        - **🔍 Book Search**: Explore individual books with transactions, analytics, and personalized recommendations
+        - **🔗 Association Rules**: Discover book recommendation relationships using advanced algorithms
+        - **💡 AI-Powered Insights**: Automated analysis with priority-based actionable recommendations
+        - **📱 Device Analysis**: Understand user behavior across desktop, mobile, and tablet devices
+        """)
+
+        st.markdown('</div>', unsafe_allow_html=True)
         
         # Sample data structure expander (collapsible)
         with st.expander("📋 Expected Data Structure", expanded=False):
@@ -585,8 +600,6 @@ def main():
             - `author`: Author's name
             - `year`: Year of publication
             """)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
         
         # Optional: Add a centered call-to-action in main area
         st.info("👆 **Ready to upload?** Use the sidebar on the left to select your CSV files and load the data.")
