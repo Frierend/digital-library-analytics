@@ -553,7 +553,7 @@ def main():
     
     else:
         # Landing Page: Welcome message (only shown pre-load, centered and isolated)
-        st.markdown('<div class="landing-container">', unsafe_allow_html=True)
+        
 
         st.markdown("## Welcome to Digital Library Analytics! 📖")
 
